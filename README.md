@@ -5,7 +5,10 @@
 ```
 $ pg_dump -h postgreshost -f mydb.sql mydb
 $ perl roachize.pl --source mydb.sql --dest mydb_for_cockroach.sql
-$ psql -h cockroachhost ... -d mydb < mydb_for_cockroach.sql
+$ psql -h localhost -U root -p 26257
+root=> create database mydb;
+\q
+$ psql -h localhost -U root -p 26257 -d mydb < mydb_for_cockroach.sql
 ```
 
 This is a HACK script to take a SQL (default) format output of pg_dump and emit
@@ -42,7 +45,7 @@ It comments out:
   CREATE EXTENSION
   ALTER TABLE \S+ OWNER
   ALTER TABLE.*nextval
-  SELECT pg_catalog)/-- \1/;
+  SELECT pg_catalog
 ```
 It removes the following unsupported expressions:
 ```
