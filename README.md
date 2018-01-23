@@ -18,6 +18,13 @@ dependent on the versions of postgres I'm using and cockroach - 9.6 and 1.1.3
 It depends on the structure of the SQL output from the pg_dump comand so isn't going
 to work on a random sql file of postgres commands.
 
+Usage:
+  `perl perl roachize.pl --source mydb.sql --dest mydb_for_cockroach.sql [--2] [--omitdata]`
+
+You can skip the `COPY` sections during debugging to speed up imports using `--omitdata`
+You can indicate you are targeting a V2 alpha cluster with `--2`
+
+
 What it does:
 
 Processes the entire file looking for the primary key definitions to hoist into
@@ -54,6 +61,3 @@ It removes the following unsupported expressions:
    ON DELETE SET NULL;
 ```
 
-### Omitting the data
-
-You can skip the `COPY` sections during debugging to speed up imports using the `--omitdata` option.

@@ -5,6 +5,7 @@ use Getopt::Long 'HelpMessage', qw(:config bundling);
 GetOptions ('source=s'  => \my $sourceDumpFile,
             'dest=s'    => \my $destDumpFile,
             'omitdata'  => \my $omitData,
+            '2'  => \my $v2,
             'help'     =>   sub { HelpMessage(0) },
 ) or HelpMessage(1);
 
@@ -70,6 +71,9 @@ while(<F>) {
         if ($num =~ /E0/ && $pk{$curtable}) {
             print D ", $pk{$curtable}\n";
             $curtable = '';
+        } else {
+            # quote all column names that are not already quoted
+            s/^(\s+)([^\" ]\S+)/$1"$2"/;
         }
     }
 
@@ -102,10 +106,14 @@ close(D);
 
 sub cleanUnsupportedKeywords {
     my($f) = @_;
-    $f =~ s/^(GRANT|REVOKE|COMMENT ON|ALTER SEQUENCE|SET |CREATE EXTENSION|ALTER TABLE \S+ OWNER |ALTER TABLE.*nextval|SELECT pg_catalog)/-- \1/;
-    $f =~ s/USING btree //;
+    $f =~ s/^(ALTER TABLE \S+ OWNER |CREATE EXTENSION|COMMENT ON|ALTER SEQUENCE|ALTER TABLE.*nextval|SELECT pg_catalog)|GRANT|REVOKE/-- \1/;
+    $f =~ s/^(SET (?!client_encoding|standard_conforming_strings|client_min_messages|search_path))/-- \1/;
     $f =~ s/DEFERRABLE INITIALLY DEFERRED//;
     $f =~ s/ON DELETE SET NULL//;
+    $f =~ s/USING btree //;
+    if (!$v2) {
+      $f =~ s/^(COMMENT ON)/-- \1/;
+    }
     return $f;
 }
 
