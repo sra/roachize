@@ -5,7 +5,6 @@ use Getopt::Long 'HelpMessage', qw(:config bundling);
 GetOptions ('source=s'  => \my $sourceDumpFile,
             'dest=s'    => \my $destDumpFile,
             'omitdata'  => \my $omitData,
-            '2'  => \my $v2,
             'help'     =>   sub { HelpMessage(0) },
 ) or HelpMessage(1);
 
@@ -21,7 +20,7 @@ my @fk;
 # Find foreign key constraints and collect them so we can add required indexes
 open(F, "<$sourceDumpFile") || die;
 while(<F>) {
-    if (/^ALTER TABLE ONLY (\S+)/ .. /^\s*$/) {
+    if (/^ALTER TABLE ONLY (?:public\.)?(\S+)/i .. /^\s*$/) {
         my $tablename = $1;
         if (/\s+ADD CONSTRAINT (\S+)_pkey (PRIMARY KEY .*);/) {
             my $pkdef = $2;
@@ -60,7 +59,7 @@ while(<F>) {
 
     # In a create table we check the table name to see if we have a PK stanza saved to print 
     # at the end
-    if (my $num = /^CREATE TABLE (\S+)/ .. /^\)/) {
+    if (my $num = /^CREATE TABLE (?:public\.)?(\S+)/i .. /^\)/) {
         if ($num == 1) {
             $curtable = $1;
         }
@@ -111,9 +110,6 @@ sub cleanUnsupportedKeywords {
     $f =~ s/DEFERRABLE INITIALLY DEFERRED//;
     $f =~ s/ON DELETE SET NULL//;
     $f =~ s/USING btree //;
-    if (!$v2) {
-      $f =~ s/^(COMMENT ON)/-- \1/;
-    }
     return $f;
 }
 
